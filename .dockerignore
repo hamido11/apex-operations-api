@@ -1,0 +1,17 @@
+# Keep the build context small and avoid leaking local files into the image.
+.git/
+.github/
+target/
+evidence/
+docs/
+scripts/
+monitoring/
+*.md
+.env
+.env.*
+!.env.example
+.idea/
+.vscode/
+*.iml
+.DS_Store
+DevOps_Engineer_Assessment.docx

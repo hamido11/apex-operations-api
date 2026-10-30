@@ -1,0 +1,62 @@
+groups:
+  - name: apex-operations-api
+    rules:
+      - alert: ApiInstanceDown
+        expr: up{job="apex-operations-api"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "API instance is down"
+          description: "Prometheus has not successfully scraped the API for 1 minute."
+
+      - alert: HighHttp5xxErrorRate
+        expr: |
+          sum(rate(http_server_requests_seconds_count{job="apex-operations-api",status=~"5.."}[5m]))
+            / clamp_min(sum(rate(http_server_requests_seconds_count{job="apex-operations-api"}[5m])), 1)
+            > 0.05
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "HTTP 5xx error rate above 5%"
+          description: "More than 5% of requests returned 5xx over the last 5 minutes."
+
+      - alert: HighRequestLatencyP95
+        expr: |
+          histogram_quantile(0.95,
+            sum(rate(http_server_requests_seconds_bucket{job="apex-operations-api"}[5m])) by (le)) > 1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "p95 request latency above 1s"
+
+      - alert: JvmHeapHigh
+        expr: |
+          sum(jvm_memory_used_bytes{job="apex-operations-api",area="heap"})
+            / sum(jvm_memory_max_bytes{job="apex-operations-api",area="heap"}) > 0.9
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "JVM heap usage above 90%"
+
+      - alert: HikariPoolSaturated
+        expr: |
+          hikaricp_connections_active{job="apex-operations-api"}
+            >= hikaricp_connections_max{job="apex-operations-api"}
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Database connection pool saturated"
+          description: "All HikariCP connections are in use; requests may be queuing or timing out."
+
+      - alert: HighCpuUsage
+        expr: process_cpu_usage{job="apex-operations-api"} > 0.85
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Process CPU usage above 85%"

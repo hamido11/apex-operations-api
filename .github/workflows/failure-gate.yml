@@ -1,0 +1,36 @@
+name: Failure Gate Demo
+
+# Manually triggered ONLY. Demonstrates that a failed required check blocks the dependent
+# release job. This deliberately runs the intentional failing test (Maven 'failure-gate'
+# profile). It is never part of the normal CI pipeline, which stays green.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  required-check:
+    name: Required check (intentional failure)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Set up Java 21
+        uses: actions/setup-java@8df1039502a15bceb9433410b1a100fbe190c53b # v4.5.0
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: maven
+
+      - name: Run intentional failing test (expected to FAIL)
+        run: ./mvnw -B -Pfailure-gate test
+
+  release:
+    name: Release (must be SKIPPED when the required check fails)
+    needs: required-check
+    runs-on: ubuntu-latest
+    steps:
+      - name: This step must not run when the gate fails
+        run: echo "If you can read this in a failed run, the gate did NOT work."

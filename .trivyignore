@@ -1,0 +1,15 @@
+# Trivy ignore list — documented, reviewed exceptions ONLY.
+# Every entry must state why it is safe to accept and when to re-evaluate.
+# Fixable CVEs are otherwise remediated by version bumps in pom.xml.
+
+# spring-webmvc CVE-2026-47884 (CRITICAL): RCE via improper path handling in XsltView.
+#   Not exploitable here: the service is JSON-only (@RestController) and configures no XSLT
+#   or MVC view resolution. No fix exists on the Spring Framework 6.2.x line used by Spring
+#   Boot 3.5.x (fixed only in 7.0.9 / Spring Boot 4). Re-evaluate on the Spring Boot 4 upgrade.
+#   Review by: 2026-12-01
+CVE-2026-47884
+
+# spring-webmvc CVE-2026-47890 (CRITICAL): stream corruption in Server-Sent Events with views.
+#   Not exploitable here: the app uses no SSE endpoints and no MVC view rendering.
+#   Same remediation constraint as above (no 6.2.x patch available). Review by: 2026-12-01
+CVE-2026-47890

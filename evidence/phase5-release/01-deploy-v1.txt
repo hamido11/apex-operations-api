@@ -1,0 +1,22 @@
+[deploy] image=apex-operations-api:1.0.0 simulate-failure=false port=8081
+ Network apex-operations_backend Creating 
+ Network apex-operations_backend Creating 
+ Network apex-operations_backend Created 
+ Network apex-operations_backend Created 
+ Container apex-operations-db-1 Creating 
+ Container apex-operations-db-1 Created 
+ Container apex-operations-api-1 Creating 
+ Container apex-operations-api-1 Created 
+ Container apex-operations-db-1 Starting 
+ Container apex-operations-db-1 Started 
+ Container apex-operations-db-1 Waiting 
+ Container apex-operations-db-1 Healthy 
+ Container apex-operations-api-1 Starting 
+ Container apex-operations-api-1 Started 
+[deploy] verifying health via smoke test...
+[smoke] target=http://localhost:8081 timeout=90s
+[smoke] readiness UP
+[smoke] liveness UP
+[smoke] GET /api/v1/operations -> 200
+[smoke] PASS
+[deploy] SUCCESS: apex-operations-api:1.0.0 deployed and verified healthy

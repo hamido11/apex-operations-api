@@ -1,0 +1,35 @@
+# pom.xml is required. Re-include it in case a global gitignore (e.g. core.excludesFile
+# with "*.xml") would otherwise exclude it, so the repo is self-contained on any machine.
+!pom.xml
+
+# Build output
+target/
+build/
+
+# Local deploy/rollback state (runtime bookkeeping)
+.deploy-state/
+
+# Secrets and local environment (NEVER commit real secrets)
+.env
+.env.*
+!.env.example
+
+# Logs
+*.log
+logs/
+
+# IDE / editor
+.idea/
+*.iml
+.vscode/
+.settings/
+.classpath
+.project
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Assessment brief (reference material, not a project deliverable)
+DevOps_Engineer_Assessment.docx

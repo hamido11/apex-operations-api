@@ -1,0 +1,15 @@
+[deploy] image=apex-operations-api:2.0.0 simulate-failure=false port=8081
+ Container apex-operations-db-1 Running 
+ Container apex-operations-api-1 Recreate 
+ Container apex-operations-api-1 Recreated 
+ Container apex-operations-db-1 Waiting 
+ Container apex-operations-db-1 Healthy 
+ Container apex-operations-api-1 Starting 
+ Container apex-operations-api-1 Started 
+[deploy] verifying health via smoke test...
+[smoke] target=http://localhost:8081 timeout=90s
+[smoke] readiness UP
+[smoke] liveness UP
+[smoke] GET /api/v1/operations -> 200
+[smoke] PASS
+[deploy] SUCCESS: apex-operations-api:2.0.0 deployed and verified healthy

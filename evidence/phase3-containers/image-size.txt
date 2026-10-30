@@ -1,0 +1,2 @@
+apex-operations-api:1.0.0 400MB
+apex-operations-api:dev 400MB

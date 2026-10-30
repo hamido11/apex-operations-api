@@ -1,0 +1,1 @@
+[nonroot] PASS: apex-operations-api:1.0.0 runs as non-root (uid=10001)

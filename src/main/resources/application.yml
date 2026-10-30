@@ -1,0 +1,71 @@
+spring:
+  application:
+    name: apex-operations-api
+
+  # Database connection. Dev defaults below are for local/Compose use only; production
+  # must inject these via environment variables / a secrets manager (never commit real values).
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/apex}
+    username: ${SPRING_DATASOURCE_USERNAME:apex}
+    password: ${SPRING_DATASOURCE_PASSWORD:apex}
+    hikari:
+      pool-name: apex-pool
+      maximum-pool-size: 10
+      minimum-idle: 2
+      connection-timeout: 10000      # ms to wait for a connection from the pool
+      validation-timeout: 5000
+      max-lifetime: 1800000
+      keepalive-time: 300000
+
+  jpa:
+    hibernate:
+      ddl-auto: validate              # schema is owned by Flyway; never auto-generate DDL
+    open-in-view: false
+    properties:
+      jakarta:
+        persistence:
+          query:
+            timeout: 5000             # ms statement timeout for JPA queries
+
+  flyway:
+    enabled: true
+    baseline-on-migrate: false
+
+  # Graceful shutdown: stop accepting new requests, then let in-flight ones finish.
+  lifecycle:
+    timeout-per-shutdown-phase: 20s
+
+server:
+  port: 8080
+  shutdown: graceful
+  tomcat:
+    connection-timeout: 20s
+
+# Application-specific configuration (see AppProperties).
+app:
+  simulate-failure: ${APP_SIMULATE_FAILURE:false}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: always            # NOTE: restrict in production (when-authorized)
+      probes:
+        enabled: true
+      group:
+        readiness:
+          include: readinessState,db,simulatedFailure
+        liveness:
+          include: livenessState
+  info:
+    env:
+      enabled: true
+
+# Structured JSON logging (Elastic Common Schema). MDC fields such as traceId are included.
+logging:
+  structured:
+    format:
+      console: ecs

@@ -1,5 +1,7 @@
 # Apex Operations API
 
+[![CI](https://github.com/hamido11/apex-operations-api/actions/workflows/ci.yml/badge.svg)](https://github.com/hamido11/apex-operations-api/actions/workflows/ci.yml)
+
 A small, production-minded operational service built for the Apex 48-hour DevOps assessment. It
 demonstrates the full path from source to a safe, reproducible release: a containerized Java 21 /
 Spring Boot REST API backed by PostgreSQL, with database migrations, health/readiness probes,

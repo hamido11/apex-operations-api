@@ -138,8 +138,8 @@ A red pipeline blocks release by design. Triage by job:
 | `publish` skipped | running on a pull request | expected — PRs never publish; publish runs on push to `main`/tags |
 | `publish` fails: GHCR auth | token/permission | `publish` job has `packages: write`; confirm `GITHUB_TOKEN` and package visibility |
 
-To re-run: **Actions → the failed run → Re-run jobs**. CI history shows this exact sequence (runs
-#1–#3 failed on Trivy DB rate-limiting, fixed iteratively; run #5 green).
+To re-run: **Actions → the failed run → Re-run jobs**. CI history shows this exact sequence — early
+runs failed on Trivy DB rate-limiting and were fixed iteratively, then went green.
 
 ## 10. Incident response (quick checklist)
 

@@ -35,10 +35,10 @@ actually been executed are marked **NOT VERIFIED**.
 | 18 | Recovery verification | ✅ VERIFIED | `evidence/phase5-release/05-post-rollback-readiness.txt` (UP) |
 | 19 | Failure investigation (DB outage) | ✅ VERIFIED | `evidence/troubleshooting/` (readiness DOWN → root cause in logs → recovered) |
 | 20 | Monitoring (Prometheus + Grafana) | ✅ VERIFIED | `evidence/phase5-monitoring/` (target up, datasource + dashboard) |
-| 21 | GitHub Actions successful run | ✅ VERIFIED | CI run #5 on `main` succeeded (`build-test` → `image-scan` → `publish`, 10m 38s). See note below — the exact run URL is refreshed after the history-rewrite force-push. |
+| 21 | GitHub Actions successful run | ✅ VERIFIED | PR #2 CI run **succeeded** (`build-test` → `image-scan`; `publish` correctly skipped on a PR) — see `evidence/phase4-ci/ci-pr-all-checks-passed.png` and `ci-pr-run-summary-gated-pipeline.png`. Merged to `main` as `3207d07`, which triggers the push-to-`main` run that also runs `publish`. |
 | 22 | GitHub Actions blocked release after failure | ⛔ NOT VERIFIED | Local proof exists (`failure-gate-demo.txt`, intentional test fails the build); the **CI-level** blocked-release still needs the **Failure Gate Demo** workflow to be run once (never triggered yet). |
-| 23 | GHCR published image tags | ✅ VERIFIED | Published to `ghcr.io/hamido11/apex-operations-api`, multi-arch (`linux/amd64`, `linux/arm64`), tag `sha-<commit>` + `latest`. Refreshed to the post-cleanup tag after the force-push. |
-| 24 | Trivy running inside CI | ✅ VERIFIED | Trivy image + dependency scan ran in CI run #5's `image-scan` job and gated the pipeline (verified locally too, item 14). |
+| 23 | GHCR published image tags | ⚠ CAPTURE AFTER MERGE | `publish` runs only on push to `main`/tags, so it is **skipped** in the PR screenshots (correct). PR #2 is now merged (`main` = `3207d07`), so the push-to-`main` run executes `publish` → `ghcr.io/hamido11/apex-operations-api`, multi-arch (`linux/amd64`, `linux/arm64`), `sha-<commit>` + `latest`. **Attach the main-push run's `publish` job + the GHCR Packages page** to close this item. |
+| 24 | Trivy running inside CI | ✅ VERIFIED | The **Build image & Trivy scan** job runs in CI — green in `evidence/phase4-ci/ci-pr-all-checks-passed.png` / `ci-pr-run-summary-gated-pipeline.png`; a run where it **failed** (and `publish` stayed skipped) is in `ci-pr-scan-failed-publish-skipped.png`. Also verified locally (item 14). |
 | 25 | Clean-environment reproduction | ✅ VERIFIED | `evidence/phase6-repro/` — fresh `git clone` → `./mvnw spotless:check verify` (BUILD SUCCESS) → image build → isolated stack healthy with Flyway-seeded data |
 
 > Reproduction caught a real defect: the candidate's **global** gitignore (`~/.gitignore_global`)
@@ -70,13 +70,29 @@ A peer review flagged defects that were verified, fixed, and re-evidenced:
 | **Deploy/rollback integrity** — Compose could silently build current source and mislabel it as the target version; a failed deploy could become a rollback target | `deploy.sh` now refuses an absent image (pull-or-fail, `--no-build`) and records rollback state only after health passes | `evidence/phase5-release/01-05*.txt` re-captured on the fixed image |
 | **Stale evidence** — deploy/rollback logs were from the pre-fix build (Tomcat 10.1.55) | Re-ran the full release demo on the current image | `evidence/phase5-release/deployed-tomcat-version.txt` → `Apache Tomcat/10.1.61` |
 
-## How to verify the CI items (21–24)
+## CI screenshots (GitHub Actions)
 
-> Items 21/23/24 were confirmed on CI run #5 / the current GHCR package. Because the corporate-email
-> history rewrite force-pushes new commit SHAs, a fresh CI run and `sha-<commit>` tag supersede them;
-> the links above are refreshed to that run before final submission. Item 22 still needs one manual
-> Failure Gate Demo run.
+Captured from the real repository (`github.com/hamido11/apex-operations-api`), PR #2:
 
-1. Open the **Actions** tab: the `CI` workflow runs `build-test` → `image-scan` → `publish`.
-2. Manually run the **Failure Gate Demo** workflow: `required-check` fails and `release` is **skipped**.
-3. Confirm the published image under the repo's **Packages** (GHCR) with `sha-<commit>` tags.
+| File | Shows |
+|---|---|
+| `evidence/phase4-ci/ci-pr-all-checks-passed.png` | Green PR run on `bab4ef1`: **Build, lint & test** ✅ + **Build image & Trivy scan** ✅; **Publish to GHCR** skipped (correct — publish never runs on a PR). |
+| `evidence/phase4-ci/ci-pr-run-summary-gated-pipeline.png` | Run summary: the gated pipeline `build-test → image-scan → publish`, `publish` skipped on the `pull_request` event. |
+| `evidence/phase4-ci/ci-pr-scan-failed-publish-skipped.png` | An earlier PR run where the **Trivy scan step** of the `image-scan` job failed (`build-test` stayed green) — shown as honest CI history. See [runbook.md](runbook.md) §9 for the common transient Trivy-DB rate-limit; re-running the job went green (`ci-pr-all-checks-passed.png`). |
+
+> **Honest reading of the failing-scan shot:** on a pull request, `publish` is skipped *regardless* of
+> the scan result (it is guarded by `if: event != pull_request`), so this image does **not** by itself
+> prove "a failure blocked the release." It only shows a red scan surfacing as a red check. The clean
+> proof of the release gate is item 22 — the **Failure Gate Demo** workflow — which is still **NOT
+> VERIFIED** until run once.
+
+## How to close the remaining CI items (22–23)
+
+The corporate-email rewrite is complete: merged `main` (`3207d07`) contains **0** occurrences of the
+old corporate address (every commit is `…@users.noreply.github.com`).
+
+1. **Item 23 (GHCR publish):** PR #2 is merged, so the push-to-`main` run executes `publish`. Open
+   **Actions → the `main` run → `Publish image to GHCR` job**, and the repo **Packages** page; attach
+   both. The new image tag is `sha-<the merge/commit SHA>`.
+2. **Item 22 (blocked release after failure):** **Actions → Failure Gate Demo → Run workflow.**
+   `required-check` fails and the dependent `release` job is **skipped** — the clean gate proof.

@@ -44,12 +44,17 @@ investigation) to confirm the results firsthand and be ready to demonstrate them
 
 ## Executed in CI (GitHub Actions)
 
-The pipeline has run on GitHub Actions: **CI run #5 on `main` succeeded** (`build-test` →
-`image-scan` → `publish`), the Trivy scan ran inside the `image-scan` job, and a multi-arch image was
-published to GHCR (`ghcr.io/hamido11/apex-operations-api`). Earlier runs #1–#3 failed on Trivy DB
-rate-limiting and were fixed iteratively (see commit history). The one CI item **not yet executed**
-is the **Failure Gate Demo** workflow (CI-level blocked-release-after-failure); it is marked
-**NOT VERIFIED** in [assessment-evidence.md](assessment-evidence.md) until triggered once.
+The pipeline has run for real on GitHub Actions in the candidate's repo
+(`github.com/hamido11/apex-operations-api`). After a git-history rewrite to remove a corporate email
+address, the work was pushed and opened as **PR #2**; its CI run **succeeded** (`build-test` →
+`image-scan`, with `publish` correctly skipped on a pull request — Trivy ran inside `image-scan`).
+Screenshots are under `evidence/phase4-ci/`. PR #2 was then **merged to `main`** (`3207d07`), and the
+push-to-`main` run executes the `publish` job (multi-arch image to GHCR,
+`ghcr.io/hamido11/apex-operations-api`). Early CI runs failed on Trivy vulnerability-DB rate-limiting
+and were fixed iteratively (see commit history and [runbook.md](runbook.md) §9). The one CI item
+**not yet executed** is the **Failure Gate Demo** workflow (the clean CI-level
+blocked-release-after-failure proof); it stays **NOT VERIFIED** in
+[assessment-evidence.md](assessment-evidence.md) until run once.
 
 ## Design decisions reviewed and understood by the candidate
 

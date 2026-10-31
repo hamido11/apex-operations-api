@@ -10,6 +10,18 @@ groups:
           summary: "API instance is down"
           description: "Prometheus has not successfully scraped the API for 1 minute."
 
+      - alert: DatabaseDown
+        expr: app_database_up{job="apex-operations-api"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Application cannot reach its database"
+          description: >-
+            app_database_up has been 0 for 1 minute: the app cannot open a validated DB connection
+            and readiness is DOWN. This catches the database-outage condition that ApiInstanceDown
+            misses, because the app itself stays up and scrapable while the DB is gone.
+
       - alert: HighHttp5xxErrorRate
         expr: |
           sum(rate(http_server_requests_seconds_count{job="apex-operations-api",status=~"5.."}[5m]))

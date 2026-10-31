@@ -2,6 +2,7 @@ package com.apex.operations.web;
 
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.Matchers.notNullValue;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
@@ -82,5 +83,36 @@ class OperationControllerIT extends AbstractIntegrationTest {
         .perform(get("/api/v1/operations/999999"))
         .andExpect(status().isNotFound())
         .andExpect(jsonPath("$.title").value("Operation not found"));
+  }
+
+  @Test
+  void getWithNonNumericId_returns400NotServerError() throws Exception {
+    // A path-variable type mismatch must be a client error, not a 500.
+    mockMvc.perform(get("/api/v1/operations/not-a-number")).andExpect(status().isBadRequest());
+  }
+
+  @Test
+  void requestToUnknownPath_returns404NotServerError() throws Exception {
+    mockMvc.perform(get("/api/v1/does-not-exist")).andExpect(status().isNotFound());
+  }
+
+  @Test
+  void unsupportedMethod_returns405NotServerError() throws Exception {
+    mockMvc.perform(delete("/api/v1/operations")).andExpect(status().isMethodNotAllowed());
+  }
+
+  @Test
+  void unsupportedContentType_returns415NotServerError() throws Exception {
+    mockMvc
+        .perform(
+            post("/api/v1/operations").contentType(MediaType.TEXT_PLAIN).content("not json at all"))
+        .andExpect(status().isUnsupportedMediaType());
+  }
+
+  @Test
+  void malformedJsonBody_returns400NotServerError() throws Exception {
+    mockMvc
+        .perform(post("/api/v1/operations").contentType(MediaType.APPLICATION_JSON).content("{"))
+        .andExpect(status().isBadRequest());
   }
 }

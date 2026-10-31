@@ -26,22 +26,40 @@ mkdir -p "${STATE_DIR}"
 
 echo "[deploy] image=${APP_IMAGE} simulate-failure=${APP_SIMULATE_FAILURE} port=${API_PORT}"
 
-# Record the rollback target: the previously deployed image becomes 'previous'.
+# Remember the current known-good image as a candidate rollback target BEFORE anything changes.
+# It is only promoted to 'previous' once the new release is verified healthy (see below), so a
+# failed deploy can never leave a bad image recorded as a rollback target.
+previous_good=""
 if [ -f "${STATE_DIR}/current" ]; then
-  prev="$(cat "${STATE_DIR}/current")"
-  if [ "${prev}" != "${APP_IMAGE}" ]; then
-    echo "${prev}" > "${STATE_DIR}/previous"
+  previous_good="$(cat "${STATE_DIR}/current")"
+fi
+
+# Ensure the EXACT image is available without letting Compose fall back to building the current
+# source tree and mislabelling it as ${APP_IMAGE} (compose.yaml has both image: and build:). If the
+# image is not present locally, try to pull it; if that also fails, refuse rather than deploy a
+# silently-rebuilt artifact masquerading as this version.
+if ! docker image inspect "${APP_IMAGE}" >/dev/null 2>&1; then
+  echo "[deploy] image ${APP_IMAGE} not present locally; attempting pull..."
+  if ! docker pull "${APP_IMAGE}"; then
+    echo "[deploy] ERROR: ${APP_IMAGE} is not available locally and cannot be pulled."
+    echo "[deploy] Refusing to deploy (Compose would otherwise build current source and label it ${APP_IMAGE})."
+    exit 3
   fi
 fi
-echo "${APP_IMAGE}" > "${STATE_DIR}/current"
 
-docker compose up -d
+# --no-build: deploy/rollback must run the resolved image above, never build on the fly.
+docker compose up -d --no-build
 
 echo "[deploy] verifying health via smoke test..."
 if "${ROOT_DIR}/scripts/smoke-test.sh"; then
+  # Record rollback state ONLY now that the release is verified healthy.
+  if [ -n "${previous_good}" ] && [ "${previous_good}" != "${APP_IMAGE}" ]; then
+    echo "${previous_good}" > "${STATE_DIR}/previous"
+  fi
+  echo "${APP_IMAGE}" > "${STATE_DIR}/current"
   echo "[deploy] SUCCESS: ${APP_IMAGE} deployed and verified healthy"
 else
-  echo "[deploy] FAILURE: ${APP_IMAGE} did not pass health/smoke checks"
+  echo "[deploy] FAILURE: ${APP_IMAGE} did not pass health/smoke checks (rollback state left unchanged)"
   docker compose ps
   docker compose logs api --tail 30 || true
   exit 1

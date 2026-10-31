@@ -1,2 +1,2 @@
-apex-operations-api -> up (  )
-prometheus -> up (  )
+apex-operations-api -> up (scrapeUrl=http://api:8080/actuator/prometheus)
+prometheus -> up (scrapeUrl=http://localhost:9090/metrics)

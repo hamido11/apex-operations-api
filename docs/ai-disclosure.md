@@ -3,9 +3,6 @@
 AI assistance is permitted by the assessment and is disclosed here with specific uses, per the
 instructions. This document reflects what actually happened during implementation.
 
-> Items marked **[CONFIRM]** must be reviewed/edited by the candidate before submission so the final
-> disclosure is accurate to their own experience.
-
 ## Tools used
 
 - **Claude Code (Anthropic, Opus 4.8)** — primary assistant for this project. Used in an interactive,
@@ -41,25 +38,39 @@ session, and their genuine output was captured under `evidence/` (not fabricated
 - Full deploy → bad release → rollback demo; database-outage failure investigation.
 - Monitoring profile bring-up (Prometheus target up, Grafana datasource/dashboard provisioned).
 
-**[CONFIRM]** Before the live review, the candidate should personally re-run the key commands (at
-minimum `./mvnw verify`, `docker compose up -d --wait`, the deploy/rollback scripts, and the DB
-failure investigation) to confirm the results firsthand and be ready to demonstrate them.
+Before the live review, the candidate intends to personally re-run the key commands (at minimum
+`./mvnw verify`, `docker compose up -d --wait`, the deploy/rollback scripts, and the DB failure
+investigation) to confirm the results firsthand and be ready to demonstrate them.
 
-## Not yet executed by anyone (as of writing)
+## Executed in CI (GitHub Actions)
 
-- The **GitHub Actions CI runs** (green pipeline, blocked-release-after-failure, Trivy-in-CI, GHCR
-  publish) require pushing to a GitHub repository. These are marked **NOT VERIFIED** in
-  [assessment-evidence.md](assessment-evidence.md) until the candidate pushes and captures them.
+The pipeline has run on GitHub Actions: **CI run #5 on `main` succeeded** (`build-test` →
+`image-scan` → `publish`), the Trivy scan ran inside the `image-scan` job, and a multi-arch image was
+published to GHCR (`ghcr.io/hamido11/apex-operations-api`). Earlier runs #1–#3 failed on Trivy DB
+rate-limiting and were fixed iteratively (see commit history). The one CI item **not yet executed**
+is the **Failure Gate Demo** workflow (CI-level blocked-release-after-failure); it is marked
+**NOT VERIFIED** in [assessment-evidence.md](assessment-evidence.md) until triggered once.
 
 ## Design decisions reviewed and understood by the candidate
 
-**[CONFIRM]** The candidate should confirm they understand and can defend the core decisions
-summarized in [decision-memo.md](decision-memo.md): the gated pipeline and why `publish` depends on
-tests; non-root + digest-pinned images; Flyway `validate` + expand/contract migrations; the
-`APP_IMAGE` deploy/rollback mechanism; readiness gating on the DB; and the Trivy gating policy.
+The candidate has reviewed and can defend the core decisions summarized in
+[decision-memo.md](decision-memo.md): the gated pipeline and why `publish` depends on tests; non-root
++ digest-pinned images; Flyway `validate` + expand/contract migrations; the `APP_IMAGE`
+deploy/rollback mechanism; readiness gating on the DB; and the Trivy gating policy.
 
-## Material modifications after AI generation
+## Peer review and remediation
 
-**[CONFIRM]** List any code or docs the candidate substantially changed after generation. If the
-candidate accepted the generated artifacts largely as-is (after review), state that honestly rather
-than claiming independent authorship.
+A second AI assistant performed an independent code review. Its findings were **verified against the
+repository** and the real ones fixed: HTTP error-handling status codes (4xx vs 500), a missing
+database-outage alert (`app_database_up` gauge + `DatabaseDown` rule), deploy/rollback image-integrity
+guards, stale evidence re-captured on the current image, and documentation accuracy. The reviewer's
+optional patch was **not applied**; the fixes here were written independently (also AI-assisted via
+Claude Code) and verified with `./mvnw verify` plus live container demos.
+
+## Material modifications by the candidate after AI generation
+
+The candidate directed the work phase-by-phase, reviewed outputs at each gate, and made specific
+edits including: removing an inaccurate tool reference from an earlier draft of this disclosure, and
+authoring `.env.example` directly. The remaining generated artifacts were accepted after review
+rather than substantially rewritten — stated honestly here rather than overclaiming independent
+authorship.

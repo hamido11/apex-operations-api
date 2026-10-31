@@ -1,17 +1,25 @@
-### GET /actuator/health
-{"status":"UP","groups":["liveness","readiness"],"components":{"db":{"status":"UP","details":{"database":"PostgreSQL","validationQuery":"isValid()"}},"diskSpace":{"status":"UP","details":{"total":102888095744,"free":16444489728,"threshold":10485760,"path":"/app/.","exists":true}},"livenessState":{"status":"UP"},"ping":{"status":"UP"},"readinessState":{"status":"UP"},"simulatedFailure":{"status":"UP"},"ssl":{"status":"UP","details":{"validChains":[],"invalidChains":[]}}}}
-### GET /actuator/health/liveness
-{"status":"UP","components":{"livenessState":{"status":"UP"}}}
-### GET /actuator/health/readiness
-{"status":"UP","components":{"db":{"status":"UP","details":{"database":"PostgreSQL","validationQuery":"isValid()"}},"readinessState":{"status":"UP"},"simulatedFailure":{"status":"UP"}}}
-### GET /api/v1/operations (seed data)
-[{"id":1,"name":"Nightly backup","status":"COMPLETED","description":"Scheduled database backup","priority":3,"createdAt":"2026-10-30T18:38:24.306291Z","updatedAt":"2026-10-30T18:38:24.306291Z"},{"id":2,"name":"Cache warmup","status":"IN_PROGRESS","description":"Pre-warm edge caches","priority":3,"createdAt":"2026-10-30T18:38:24.306291Z","updatedAt":"2026-10-30T18:38:24.306291Z"},{"id":3,"name":"Certificate rotation","status":"PENDING","description":"Rotate TLS certificates","priority":3,"createdAt":"2026-10-30T18:38:24.306291Z","updatedAt":"2026-10-30T18:38:24.306291Z"}]
-### POST /api/v1/operations
-HTTP/1.1 201 
-X-Request-Id: 17967f80-e32a-4dd4-af72-2398ca7987c8
-Location: /api/v1/operations/4
+$ curl -i http://localhost:8081/api/v1/operations
+HTTP/1.1 200 
+X-Request-Id: 35a6d24a-3070-4428-9872-27433f265c8a
 Content-Type: application/json
 Transfer-Encoding: chunked
-Date: Fri, 30 Oct 2026 18:38:50 GMT
+Date: Sat, 31 Oct 2026 06:48:00 GMT
 
-{"id":4,"name":"Deploy v1","status":"IN_PROGRESS","description":"created via API","priority":2,"createdAt":"2026-10-30T18:38:50.482615714Z","updatedAt":"2026-10-30T18:38:50.482615714Z"}
+--- body (first op) ---
+{
+  "id": 1,
+  "name": "Nightly backup",
+  "status": "COMPLETED",
+  "description": "Scheduled database backup",
+  "priority": 3,
+  "createdAt": "2026-10-30T18:38:24.306291Z",
+  "updatedAt": "2026-10-30T18:38:24.306291Z"
+}
+$ curl -i -X POST .../operations
+HTTP/1.1 201 
+X-Request-Id: a43b76b4-01c1-42ff-ba6c-56df9f8df9ce
+Location: /api/v1/operations/6
+Content-Type: application/json
+Transfer-Encoding: chunked
+Date: Sat, 31 Oct 2026 06:48:00 GMT
+

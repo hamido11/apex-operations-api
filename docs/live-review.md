@@ -135,6 +135,22 @@ API_PORT=8081 ./scripts/rollback.sh                           # back to 1.0.0, v
 - Actions → run **Failure Gate Demo** → `required-check` fails, `release` is **skipped**.
 - A normal push/PR shows the green `build-test` → `image-scan` → `publish` chain.
 
+**E. Error handling (correct 4xx, not 500)**
+```bash
+for p in operations/abc nope; do printf "%s -> " "$p"; curl -s -o /dev/null -w '%{http_code}\n' "$B/api/v1/$p"; done
+curl -s -o /dev/null -w 'DELETE -> %{http_code}\n' -X DELETE "$B/api/v1/operations"       # 405
+curl -s "$B/api/v1/operations/abc" | python3 -m json.tool                                 # RFC 7807 body
+```
+Bad id → 400, unknown path → 404, wrong method → 405, wrong content-type → 415 — each a ProblemDetail.
+
+**F. DB-outage alert fires** (monitoring profile up)
+```bash
+docker compose stop db
+# ~90s later (for: 1m), Prometheus → http://localhost:9090/alerts shows DatabaseDown FIRING,
+# while ApiInstanceDown stays inactive (the app is still scrapable — that's the gap it fills).
+docker compose start db                                   # alert resolves
+```
+
 ---
 
 ## 8. Talking points (defend the decisions)

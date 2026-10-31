@@ -1,3 +1,5 @@
-NAME                    IMAGE                     COMMAND                  SERVICE   CREATED              STATUS                        PORTS
-apex-operations-api-1   apex-operations-api:dev   "java org.springfram…"   api       50 seconds ago       Up 49 seconds (healthy)       0.0.0.0:8081->8080/tcp, [::]:8081->8080/tcp
-apex-operations-db-1    postgres:16-alpine        "docker-entrypoint.s…"   db        About a minute ago   Up About a minute (healthy)   5432/tcp
+NAME                           IMAGE                       STATUS
+apex-operations-api-1          apex-operations-api:1.0.0   Up 3 minutes (healthy)
+apex-operations-db-1           postgres:16-alpine          Up 55 seconds (healthy)
+apex-operations-grafana-1      grafana/grafana:11.2.0      Up 3 minutes
+apex-operations-prometheus-1   prom/prometheus:v2.54.1     Up 3 minutes

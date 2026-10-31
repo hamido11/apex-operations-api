@@ -64,6 +64,28 @@ flowchart LR
 - **IAM**: task execution role (pull image, read secrets) separate from the task role (app runtime);
   least privilege throughout.
 
+### Illustrative monthly cost (us-east-1, on-demand)
+
+Rough order-of-magnitude estimates to size the architecture — **not a quote**. Verify against the
+[AWS Pricing Calculator](https://calculator.aws/) before committing; actual cost depends on traffic,
+log volume, and data transfer.
+
+| Component | Dev (minimal) | Small prod (HA) |
+|---|---|---|
+| ECS Fargate (0.25 vCPU / 0.5 GB) | ~$9 (1 task, or ~$3 on Spot) | ~$18 (2 tasks, 24/7) |
+| Application Load Balancer | ~$18–25 (base + LCUs) | ~$22–30 |
+| RDS PostgreSQL (`db.t4g.micro` + 20 GB gp3) | ~$15 (single-AZ) | ~$30 (Multi-AZ) |
+| Secrets Manager | <$1 (per secret) | ~$1–2 |
+| ECR storage | <$1 (few images) | ~$1–2 |
+| CloudWatch (logs + metrics + alarms) | ~$5 | ~$10–20 |
+| **Approx. total** | **~$50–60/mo** | **~$85–130/mo** |
+
+Sources: [Fargate pricing](https://aws.amazon.com/fargate/pricing/),
+[ALB pricing](https://aws.amazon.com/elasticloadbalancing/pricing/),
+[RDS pricing](https://aws.amazon.com/rds/postgresql/pricing/),
+[Secrets Manager pricing](https://aws.amazon.com/secrets-manager/pricing/),
+[CloudWatch pricing](https://aws.amazon.com/cloudwatch/pricing/) (all retrieved 2026-10-31).
+
 Cost controls: single-AZ + Fargate Spot in dev, right-sized task CPU/memory, log retention limits,
 and scale-in policies. Nothing in this section is deployed as part of the assessment.
 

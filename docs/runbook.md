@@ -64,11 +64,35 @@ curl -s localhost:8080/actuator/health/readiness   # expect UP
 ```
 
 Data persists in the `pgdata` volume across container restarts/recreation. **Do not** run
-`docker compose down -v` unless you intend to delete the database volume. Back up with:
+`docker compose down -v` unless you intend to delete the database volume.
+
+**Backup:**
 
 ```bash
-docker compose exec db pg_dump -U apex apex > backup.sql
+docker compose exec db pg_dump -U apex -Fc apex > backup.dump   # custom format (compressed)
+# or plain SQL:  docker compose exec db pg_dump -U apex apex > backup.sql
 ```
+
+**Restore** (into a fresh/empty database — e.g. after `down -v` or on a new host):
+
+```bash
+# 1. Bring up ONLY the database so the app doesn't race the restore:
+docker compose up -d db
+docker compose exec db pg_isready -U apex        # wait for 'accepting connections'
+
+# 2a. Restore a custom-format dump (recommended; --clean drops objects first):
+docker compose exec -T db pg_restore -U apex -d apex --clean --if-exists < backup.dump
+# 2b. ...or a plain-SQL dump:
+docker compose exec -T db psql -U apex -d apex < backup.sql
+
+# 3. Start the app; Flyway sees the schema already at the expected version and only validates:
+docker compose up -d
+curl -s localhost:8080/actuator/health/readiness   # expect UP
+```
+
+> Flyway is **forward-only** and migrations are backward-compatible (expand/contract), so recovery is
+> restore-then-roll-forward — never an automatic schema "undo". For a destructive migration, back up
+> first and forward-fix. See [release-and-rollback.md](release-and-rollback.md).
 
 ## 6. API troubleshooting
 
@@ -99,7 +123,25 @@ docker compose logs -f api                                  # follow
 docker compose logs api | grep '"logger":"com.apex.operations'  # app logs only
 ```
 
-## 9. Incident response (quick checklist)
+## 9. CI pipeline failures (GitHub Actions)
+
+The pipeline is `build-test` → `image-scan` → `publish` (publish runs only on push to `main`/tags).
+A red pipeline blocks release by design. Triage by job:
+
+| Symptom | Likely cause | Action |
+|---|---|---|
+| `build-test` fails on Spotless | formatting drift | run `./mvnw spotless:apply`, commit |
+| `build-test` fails on a test | real regression or flaky Testcontainers | read the uploaded `test-reports` artifact; reproduce locally with `./mvnw verify` |
+| `image-scan` fails: Trivy `TOOMANYREQUESTS` / DB download | vuln-DB mirror rate-limited | it uses the default `mirror.gcr.io` + a cached DB; re-run the job. Do **not** pin a single mirror. |
+| `image-scan` fails: Maven Central `429` on `fs` scan | dependency-tree resolution throttled | already mitigated with `trivy fs --offline-scan`; re-run |
+| `image-scan` fails on a **fixable CRITICAL** CVE | a real vulnerability with a fix | bump the dependency (see `pom.xml` version overrides); only `.trivyignore` with written justification + review date if genuinely unfixable/not-exploitable |
+| `publish` skipped | running on a pull request | expected — PRs never publish; publish runs on push to `main`/tags |
+| `publish` fails: GHCR auth | token/permission | `publish` job has `packages: write`; confirm `GITHUB_TOKEN` and package visibility |
+
+To re-run: **Actions → the failed run → Re-run jobs**. CI history shows this exact sequence (runs
+#1–#3 failed on Trivy DB rate-limiting, fixed iteratively; run #5 green).
+
+## 10. Incident response (quick checklist)
 
 1. **Assess**: `docker compose ps`; check `/actuator/health` and `/actuator/health/readiness`.
 2. **Identify blast radius**: is it the API (liveness down), a dependency (readiness down, db DOWN),

@@ -1,0 +1,9 @@
+[
+  {
+    "alertname": "DatabaseDown",
+    "severity": "critical",
+    "state": "firing",
+    "activeAt": "2026-10-31T06:45:42.346547662Z",
+    "summary": "Application cannot reach its database"
+  }
+]

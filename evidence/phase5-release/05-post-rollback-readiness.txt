@@ -1,1 +1,18 @@
-{"status":"UP","components":{"db":{"status":"UP","details":{"database":"PostgreSQL","validationQuery":"isValid()"}},"readinessState":{"status":"UP"},"simulatedFailure":{"status":"UP"}}}
+{
+    "status": "UP",
+    "components": {
+        "db": {
+            "status": "UP",
+            "details": {
+                "database": "PostgreSQL",
+                "validationQuery": "isValid()"
+            }
+        },
+        "readinessState": {
+            "status": "UP"
+        },
+        "simulatedFailure": {
+            "status": "UP"
+        }
+    }
+}

@@ -1,0 +1,18 @@
+# Error handling — HTTP status codes returned by the running service (post-fix)
+# Each previously returned 500; now returns the correct 4xx with an RFC 7807 ProblemDetail.
+
+bad id (/operations/abc)       -> 400
+unknown path (/api/v1/nope)    -> 404
+wrong method (DELETE list)     -> 405
+wrong content-type (text/plain)-> 415
+malformed json                 -> 400
+missing id (/operations/999999)-> 404
+
+# Sample ProblemDetail body (bad id):
+{
+    "type": "about:blank",
+    "title": "Bad Request",
+    "status": 400,
+    "detail": "Failed to convert 'id' with value: 'abc'",
+    "instance": "/api/v1/operations/abc"
+}
